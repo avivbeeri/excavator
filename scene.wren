@@ -83,7 +83,7 @@ class Scene {
       Canvas.rect(_tileSize * x - border, _tileSize * y - border, _tileSize + border * 2, _tileSize + border * 2, HOVER_COLOR)
     }
     _animations.each {|anim| anim.draw() }
-    Canvas.print(_model.movesAllowed, Canvas.width - 8 * 2, 0, Color.white)
+    Canvas.print(_model.movesTaken, Canvas.width - 8 * 2, 0, Color.white)
   }
 }
 
@@ -128,6 +128,7 @@ class ItemSprite is Sprite {
   construct new(item, size) {
     super(item.pos)
     _itemType = item.itemType
+    _damage = 3 - item.health
     _tileSize = size
     _ground = []
 
@@ -142,7 +143,7 @@ class ItemSprite is Sprite {
 
   draw() {
     _ground.each {|ground| ground.draw() }
-    Resource.image(_itemType).draw(_tileSize * pos.x, _tileSize * pos.y)
+    Resource.image("%(_itemType)-%(_damage)").draw(_tileSize * pos.x, _tileSize * pos.y)
   }
 }
 

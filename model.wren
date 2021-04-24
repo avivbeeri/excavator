@@ -4,18 +4,23 @@ import "./log" for Log
 class Item {
   construct new(pos, size, type) {
     _pos = pos
+    _health = 3
     _size = size
     _itemType = type
   }
   pos { _pos }
   size { _size }
   itemType { _itemType }
+  health { _health }
+  damage() {
+    _health = (_health - 1).max(0)
+  }
 }
 
 
 class Model {
   construct new(width, height, depth) {
-    _movesAllowed = 20
+    _movesTaken = 0
     _width = width
     _height = height
     _grid = List.filled(width * height, 0)
@@ -28,11 +33,11 @@ class Model {
     ]
   }
 
-  isComplete { _items.count == 0 || _movesAllowed == 0 }
+  isComplete { _items.count == 0 }
   grid { _grid }
   foundItems { _foundItems }
   items { _items }
-  movesAllowed { _movesAllowed }
+  movesTaken { _movesTaken }
   width { _width }
   height { _height }
   [x, y] {
@@ -52,36 +57,46 @@ class Model {
 
   digAt(x, y, layers) {
     var result = []
-    this[x, y] = this[x, y] + layers
-    var item = itemAt(x, y)
-    if (item) {
-      var top = item.pos
-      var bottom = item.pos + item.size
-      var covered = false
-      for (y in top.y...bottom.y) {
-        for (x in top.x...bottom.x) {
-          if (!itemAt(x, y)) {
-            covered = true
-            break
+    var currentItem = itemAt(x, y)
+    if (currentItem) {
+      result.add(["damage", currentItem])
+      currentItem.damage()
+      Log.debug("Damaged %(currentItem.itemType) at %(x), %(y)")
+      if (currentItem.health == 0) {
+        _items.remove(currentItem)
+        result.add(["destroyed", currentItem])
+        Log.debug("Destroyed %(currentItem.itemType) at %(x), %(y)")
+      }
+    } else {
+      this[x, y] = this[x, y] + layers
+      var item = itemAt(x, y)
+      Log.debug("Digging at %(x), %(y)")
+      if (item) {
+        var top = item.pos
+        var bottom = item.pos + item.size
+        var covered = false
+        for (y in top.y...bottom.y) {
+          for (x in top.x...bottom.x) {
+            if (!itemAt(x, y)) {
+              covered = true
+              break
+            }
           }
         }
-      }
-      if (!covered) {
-        _items.remove(item)
-        _foundItems.add(item)
-        result.add(["found", item])
-        Log.debug("Item %(item.itemType) was found!")
+        if (!covered) {
+          _items.remove(item)
+          _foundItems.add(item)
+          result.add(["found", item])
+          Log.debug("Item %(item.itemType) was found!")
+        }
       }
     }
-    _movesAllowed = (_movesAllowed - 1).max(0)
-    if (_movesAllowed == 0) {
-      result.add(["noMoreMoves"])
-    }
+    _movesTaken = (_movesTaken + 1)
     return result
   }
 
-  itemAt(x, y) {
-    var depth = this[x, y]
+  itemAt(x, y) { itemAt(x, y, this[x, y]) }
+  itemAt(x, y, depth) {
     for (item in _items) {
       var corner = item.pos + item.size
       if (x >= item.pos.x && y >= item.pos.y && x < corner.x && y < corner.y) {
