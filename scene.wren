@@ -1,6 +1,8 @@
 import "graphics" for Canvas, Color
 import "input" for Mouse
+import "math" for Vec
 import "./model" for Model
+import "./resource" for Resource
 
 var BROWNS = [
   Color.hex("#7c3f00"),
@@ -19,19 +21,41 @@ class Scene {
     _model = Model.new(5, 5, _maxDepth)
     _tileSize = Canvas.height / _model.height
     _hoverPos = null
+    _sprites = []
+    updateView()
   }
 
   update() {
     var pos = Mouse.pos
     _hoverPos = null
-    if (pos.x >= 0 && pos.x < (_tileSize * _model.width) && pos.y >= 0 && pos.y < (_tileSize * _model.height)) {
+    if (pos.x >= 0 && pos.x < (_tileSize * _model.width) &&
+        pos.y >= 0 && pos.y < (_tileSize * _model.height)) {
       pos.x = (pos.x / _tileSize).floor
       pos.y = (pos.y / _tileSize).floor
       _hoverPos = pos
       if (Mouse["left"].justPressed) {
-        _model.digAt(pos.x, pos.y, 1)
+        var result = _model.digAt(pos.x, pos.y, 1)
+
+        updateView()
       }
     }
+  }
+
+  updateView() {
+    var sprites = _sprites = []
+    for (item in _model.items) {
+      sprites.add(ItemSprite.new(item, _tileSize))
+    }
+    for (y in 0..._model.height) {
+      for (x in 0..._model.width) {
+        var depth = _model[x, y]
+        if (_model.itemAt(x, y)) {
+        } else {
+          sprites.add(GroundTile.new(Vec.new(x, y, depth), _tileSize))
+        }
+      }
+    }
+    sprites.sort {|a, b| a.pos.z > b.pos.z }
   }
 
   getDepthColor(depth) {
@@ -40,21 +64,60 @@ class Scene {
 
   draw(alpha) {
     Canvas.cls(Color.darkgray)
-    for (y in 0..._model.height) {
-      for (x in 0..._model.width) {
-        var color = getDepthColor(_model[x, y].min(_maxDepth))
-        Canvas.rectfill(_tileSize * x, _tileSize * y, _tileSize, _tileSize, color)
-        if (_model.itemAt(x, y)) {
-          Canvas.rectfill(_tileSize * x, _tileSize * y, _tileSize, _tileSize, Color.yellow)
-        }
-        Canvas.rect(_tileSize * x, _tileSize * y, _tileSize, _tileSize, Color.darkpurple)
-      }
-    }
+    _sprites.each {|sprite| sprite.draw() }
     if (_hoverPos) {
-      var border = 1
+      var border = 2
       var x = _hoverPos.x
       var y = _hoverPos.y
       Canvas.rect(_tileSize * x - border, _tileSize * y - border, _tileSize + border * 2, _tileSize + border * 2, HOVER_COLOR)
     }
+  }
+}
+
+class Sprite {
+  construct new(pos) {
+    _pos = pos
+  }
+
+  pos { _pos }
+  draw() {}
+}
+
+class ItemSprite is Sprite {
+  construct new(item, size) {
+    super(item.pos)
+    _itemType = item.itemType
+    _tileSize = size
+    _ground = []
+
+    var top = item.pos
+    var bottom = item.pos + item.size
+    for (y in top.y...bottom.y) {
+      for (x in top.x...bottom.x) {
+        _ground.add(GroundTile.new(Vec.new(x, y, top.z), size))
+      }
+    }
+  }
+
+  draw() {
+    _ground.each {|ground| ground.draw() }
+    Resource.image(_itemType).draw(_tileSize * pos.x, _tileSize * pos.y)
+  }
+}
+
+class GroundTile is Sprite {
+  construct new(pos, size) {
+    super(pos)
+    _tileSize = size
+  }
+
+  draw() {
+    var color = getDepthColor(pos.z)
+    Canvas.rectfill(_tileSize * pos.x, _tileSize * pos.y, _tileSize, _tileSize, color)
+    Canvas.rect(_tileSize * pos.x, _tileSize * pos.y, _tileSize, _tileSize, Color.darkpurple)
+  }
+
+  getDepthColor(depth) {
+    return BROWNS[depth.min(BROWNS.count - 1)] || Color.lightgray
   }
 }

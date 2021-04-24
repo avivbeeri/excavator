@@ -30,13 +30,15 @@ class Model {
     _foundItems = []
     _items = [
       Item.new(Vec.new(0, 0, 1), Vec.new(1, 1), "coin"),
-      Item.new(Vec.new(1, 0, 3), Vec.new(1, 2), "bone")
+      Item.new(Vec.new(1, 0, 3), Vec.new(1, 2), "bone"),
+      Item.new(Vec.new(1, 0, 5), Vec.new(2, 2), "pot")
     ]
   }
 
   isComplete { _items.count == 0 }
   grid { _grid }
   foundItems { _foundItems }
+  items { _items }
   width { _width }
   height { _height }
   [x, y] {
@@ -55,6 +57,7 @@ class Model {
   }
 
   digAt(x, y, layers) {
+    result = []
     this[x, y] = this[x, y] + layers
     var item = itemAt(x, y)
     if (item) {
@@ -72,10 +75,11 @@ class Model {
       if (!covered) {
         _items.remove(item)
         _foundItems.add(item)
+        result.add([item, "found"])
         Log.debug("Item %(item.itemType) was found!")
       }
     }
-    return item
+    return result
   }
 
   itemAt(x, y) {
