@@ -28,6 +28,7 @@ class Scene {
   }
 
   update() {
+    var events = []
     _animations = _animations.where{|anim|
       anim.update()
       return !anim.done
@@ -40,13 +41,13 @@ class Scene {
       pos.y = (pos.y / _tileSize).floor
       _hoverPos = pos
       if (Mouse["left"].justPressed) {
-        var result = _model.digAt(pos.x, pos.y, 1)
+        events.addAll(_model.digAt(pos.x, pos.y, 1))
         updateView()
-        for (event in result) {
-          if (event[1] == "found") {
-            _animations.add(ItemFoundAnimation.new(event[0], _tileSize))
-          }
-        }
+      }
+    }
+    for (event in events) {
+      if (event[0] == "found") {
+        _animations.add(ItemFoundAnimation.new(event[1], _tileSize))
       }
     }
   }
@@ -82,6 +83,7 @@ class Scene {
       Canvas.rect(_tileSize * x - border, _tileSize * y - border, _tileSize + border * 2, _tileSize + border * 2, HOVER_COLOR)
     }
     _animations.each {|anim| anim.draw() }
+    Canvas.print(_model.movesAllowed, Canvas.width - 8 * 2, 0, Color.white)
   }
 }
 

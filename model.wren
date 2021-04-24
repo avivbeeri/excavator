@@ -1,15 +1,6 @@
 import "math" for Vec
 import "./log" for Log
 
-class ActionResult {
-  construct new(success, effects) {
-    _success = success
-    _effects = effects
-  }
-  success { _success }
-  effects { _effects }
-}
-
 class Item {
   construct new(pos, size, type) {
     _pos = pos
@@ -24,6 +15,7 @@ class Item {
 
 class Model {
   construct new(width, height, depth) {
+    _movesAllowed = 20
     _width = width
     _height = height
     _grid = List.filled(width * height, 0)
@@ -31,14 +23,16 @@ class Model {
     _items = [
       Item.new(Vec.new(0, 0, 1), Vec.new(1, 1), "coin"),
       Item.new(Vec.new(1, 0, 3), Vec.new(1, 2), "bone"),
-      Item.new(Vec.new(1, 0, 5), Vec.new(2, 2), "pot")
+      Item.new(Vec.new(1, 4, 4), Vec.new(2, 1), "ironbar"),
+      Item.new(Vec.new(3, 3, 4), Vec.new(2, 2), "pot")
     ]
   }
 
-  isComplete { _items.count == 0 }
+  isComplete { _items.count == 0 || _movesAllowed == 0 }
   grid { _grid }
   foundItems { _foundItems }
   items { _items }
+  movesAllowed { _movesAllowed }
   width { _width }
   height { _height }
   [x, y] {
@@ -75,9 +69,13 @@ class Model {
       if (!covered) {
         _items.remove(item)
         _foundItems.add(item)
-        result.add([item, "found"])
+        result.add(["found", item])
         Log.debug("Item %(item.itemType) was found!")
       }
+    }
+    _movesAllowed = (_movesAllowed - 1).max(0)
+    if (_movesAllowed == 0) {
+      result.add(["noMoreMoves"])
     }
     return result
   }
