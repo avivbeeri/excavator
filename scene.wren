@@ -22,10 +22,16 @@ class Scene {
     _tileSize = Canvas.height / _model.height
     _hoverPos = null
     _sprites = []
+    _animations = []
+
     updateView()
   }
 
   update() {
+    _animations = _animations.where{|anim|
+      anim.update()
+      return !anim.done
+    }.toList
     var pos = Mouse.pos
     _hoverPos = null
     if (pos.x >= 0 && pos.x < (_tileSize * _model.width) &&
@@ -35,8 +41,12 @@ class Scene {
       _hoverPos = pos
       if (Mouse["left"].justPressed) {
         var result = _model.digAt(pos.x, pos.y, 1)
-
         updateView()
+        for (event in result) {
+          if (event[1] == "found") {
+            _animations.add(ItemFoundAnimation.new(event[0], _tileSize))
+          }
+        }
       }
     }
   }
@@ -71,6 +81,35 @@ class Scene {
       var y = _hoverPos.y
       Canvas.rect(_tileSize * x - border, _tileSize * y - border, _tileSize + border * 2, _tileSize + border * 2, HOVER_COLOR)
     }
+    _animations.each {|anim| anim.draw() }
+  }
+}
+
+class Animation {
+  construct new(pos) {
+    _pos = pos
+  }
+
+  pos { _pos }
+  done { true }
+  update() {}
+  draw() {}
+}
+
+class ItemFoundAnimation is Animation {
+  construct new(item, tileSize) {
+    super(item.pos)
+    _t = 0
+    _tileSize = tileSize
+    _sprite = ItemSprite.new(item, tileSize)
+  }
+
+  update() {
+    _t = _t + 1
+  }
+  done { _t > 60 }
+  draw() {
+    _sprite.draw()
   }
 }
 

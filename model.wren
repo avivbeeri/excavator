@@ -57,7 +57,7 @@ class Model {
   }
 
   digAt(x, y, layers) {
-    result = []
+    var result = []
     this[x, y] = this[x, y] + layers
     var item = itemAt(x, y)
     if (item) {
