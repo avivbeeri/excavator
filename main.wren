@@ -1,9 +1,11 @@
+import "dome" for Window
 import "./game" for GameScene
 import "./menu" for MenuScene
 
 class Main {
   construct new() {}
   init() {
+    Window.title = "Excavator"
     _scenes = {
       "game": GameScene,
       "menu": MenuScene
