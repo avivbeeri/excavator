@@ -62,11 +62,15 @@ class Model {
       result.add(["damage", currentItem])
       currentItem.damage()
       Log.debug("Damaged %(currentItem.itemType) at %(x), %(y)")
+      /*
+
+
       if (currentItem.health == 0) {
         _items.remove(currentItem)
         result.add(["destroyed", currentItem])
         Log.debug("Destroyed %(currentItem.itemType) at %(x), %(y)")
       }
+      */
     } else {
       this[x, y] = this[x, y] + layers
       var item = itemAt(x, y)
