@@ -27,9 +27,9 @@ class Model {
     _foundItems = []
     _items = [
       Item.new(Vec.new(0, 0, 1), Vec.new(1, 1), "coin"),
-      Item.new(Vec.new(1, 0, 3), Vec.new(1, 2), "bone"),
-      Item.new(Vec.new(1, 4, 4), Vec.new(2, 1), "ironbar"),
-      Item.new(Vec.new(3, 3, 4), Vec.new(2, 2), "pot")
+      // Item.new(Vec.new(1, 0, 3), Vec.new(1, 2), "bone"),
+      // Item.new(Vec.new(1, 4, 4), Vec.new(2, 1), "ironbar"),
+      // Item.new(Vec.new(3, 3, 4), Vec.new(2, 2), "pot")
     ]
   }
 
@@ -92,6 +92,9 @@ class Model {
           _foundItems.add(item)
           result.add(["found", item])
           Log.debug("Item %(item.itemType) was found!")
+        }
+        if (isComplete) {
+          result.add(["complete"])
         }
       }
     }
