@@ -240,11 +240,11 @@ class ResultScreen is Animation {
   }
 
   draw() {
-    Canvas.rectfill(16, 16, Canvas.width - 32, Canvas.height - 32, Color.lightgray)
+    Canvas.rectfill(16, 16, Canvas.width - 32, Canvas.height - 32, Color.darkgray)
     Canvas.print("Dig completed", 20, 20, Color.white)
     Canvas.print("Score: %(_score)", 20, 28, Color.white)
 
-    Canvas.print("Press space to return to the menu", 20,  Canvas.height - 32, Color.lightgray)
+    Canvas.print("Press space to return to the menu", 20,  Canvas.height - 32, Color.white)
   }
 
 }
