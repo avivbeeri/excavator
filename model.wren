@@ -2,16 +2,18 @@ import "math" for Vec
 import "./log" for Log
 
 class Item {
-  construct new(pos, size, type) {
+  construct new(pos, size, type, value) {
     _pos = pos
     _health = 3
     _size = size
     _itemType = type
+    _value = value
   }
   pos { _pos }
   size { _size }
   itemType { _itemType }
   health { _health }
+  value { _value }
   damage() {
     _health = (_health - 1).max(0)
   }
@@ -26,10 +28,10 @@ class Model {
     _grid = List.filled(width * height, 0)
     _foundItems = []
     _items = [
-      Item.new(Vec.new(0, 0, 1), Vec.new(1, 1), "coin"),
-      // Item.new(Vec.new(1, 0, 3), Vec.new(1, 2), "bone"),
-      // Item.new(Vec.new(1, 4, 4), Vec.new(2, 1), "ironbar"),
-      // Item.new(Vec.new(3, 3, 4), Vec.new(2, 2), "pot")
+      Item.new(Vec.new(0, 0, 1), Vec.new(1, 1), "coin", 4),
+      Item.new(Vec.new(1, 0, 3), Vec.new(1, 2), "bone", 8),
+      Item.new(Vec.new(1, 4, 4), Vec.new(2, 1), "ironbar", 8),
+      Item.new(Vec.new(3, 3, 4), Vec.new(2, 2), "pot", 16)
     ]
   }
 
@@ -60,6 +62,9 @@ class Model {
     var currentItem = itemAt(x, y)
     if (currentItem) {
       result.add(["damage", currentItem])
+      if (currentItem.health > 0) {
+        _movesTaken = (_movesTaken + 1)
+      }
       currentItem.damage()
       Log.debug("Damaged %(currentItem.itemType) at %(x), %(y)")
       /*
@@ -97,8 +102,8 @@ class Model {
           result.add(["complete"])
         }
       }
+      _movesTaken = (_movesTaken + 1)
     }
-    _movesTaken = (_movesTaken + 1)
     return result
   }
 
@@ -113,5 +118,20 @@ class Model {
       }
     }
     return null
+  }
+
+  calculateScore() {
+    var total = 0
+    var totalDepth = 0
+    for (item in _foundItems) {
+      var value = (item.value / 2.pow(3 - item.health)).floor
+      Log.debug("%(item.itemType) with %(item.health) health = %(value)")
+      total = total + value
+      totalDepth = totalDepth + item.pos.z
+    }
+    Log.debug("Spend %(_movesTaken) to complete")
+    total = total - (_movesTaken - totalDepth)
+
+    return total
   }
 }

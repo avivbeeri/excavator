@@ -4,6 +4,7 @@ import "math" for Vec
 import "./scene" for Scene
 import "./model" for Model
 import "./resource" for Resource
+import "./profile" for Profile
 
 var BROWNS = [
   Color.hex("#7c3f00"),
@@ -31,10 +32,15 @@ class GameScene is Scene {
 
   update() {
     var events = []
-    _animations = _animations.where{|anim|
-      anim.update()
-      return !anim.done
-    }.toList
+    if (_animations.count > 0) {
+      var block = _animations[0].update()
+      if (_animations[0].done) {
+        _animations.removeAt(0)
+      }
+      if (block) {
+        return
+      }
+    }
     var pos = Mouse.pos
     _hoverPos = null
     if (pos.x >= 0 && pos.x < (_tileSize * _model.width) &&
@@ -87,7 +93,9 @@ class GameScene is Scene {
       var y = _hoverPos.y
       Canvas.rect(_tileSize * x - border, _tileSize * y - border, _tileSize + border * 2, _tileSize + border * 2, HOVER_COLOR)
     }
-    _animations.each {|anim| anim.draw() }
+    if (_animations.count > 0) {
+      _animations[0].draw()
+    }
     Canvas.print(_model.movesTaken, Canvas.width - 8 * 2, 0, Color.white)
   }
 }
@@ -172,7 +180,7 @@ class ResultScreen is Animation {
   construct new(parent, data) {
     super()
     _parent = parent
-    _data = data
+    _score = data[0].calculateScore()
   }
 
   done { false }
@@ -180,14 +188,17 @@ class ResultScreen is Animation {
   update() {
     super.update()
     if (Keyboard["space"].justPressed) {
+      Profile.gain(_score)
       _parent.parent.loadScene("menu")
-      return
+      return true
     }
+    return true
   }
 
   draw() {
     Canvas.rectfill(16, 16, Canvas.width - 32, Canvas.height - 32, Color.lightgray)
     Canvas.print("Dig completed", 20, 20, Color.white)
+    Canvas.print("Score: %(_score)", 20, 28, Color.white)
 
     Canvas.print("Press space to return to the menu", 20,  Canvas.height - 32, Color.lightgray)
   }

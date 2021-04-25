@@ -8,7 +8,7 @@ class Main {
       "game": GameScene,
       "menu": MenuScene
     }
-    loadScene("game")
+    loadScene("menu")
   }
 
   update() {
