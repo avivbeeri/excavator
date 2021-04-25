@@ -5,6 +5,7 @@ import "./scene" for Scene
 import "./model" for Model, Tool
 import "./resource" for Resource
 import "./profile" for Profile
+import "./widgets" for Button
 
 var BROWNS = [
   Color.hex("#7c3f00"),
@@ -13,7 +14,7 @@ var BROWNS = [
   Color.hex("#492201"),
   Color.hex("#3e1c00")
 ]
-var HOVER_COLOR = Color.rgb(255, 255, 255, 128)
+var HOVER_COLOR = Color.rgb(255, 255, 255, 64)
 
 
 class GameScene is Scene {
@@ -29,14 +30,31 @@ class GameScene is Scene {
     _animations = []
     _tools = [
       Tool.new("Trowel", 0, 1),
-      Tool.new("Shovel", 1, 3)
+      Tool.new("Shovel", 1, 2)
     ]
-    _selectedTool = 1
+    _selectedTool = 0
+    var i = 0
+    _buttons = _tools.map {|tool|
+      var name = tool.name
+      var button = Button.new(name,
+        Vec.new(_tileSize * (_model.width + 1), 16 + i * 24),
+        Vec.new(name.count * 8 + 16, 16)
+      )
+      i = i + 1
+      return button
+    }.toList
 
     updateView()
   }
 
   update() {
+    var i = 0
+    _buttons.each {|button|
+      if (button.update().clicked) {
+        _selectedTool = i
+      }
+      i = i + 1
+    }
     var events = []
     if (_animations.count > 0) {
       var block = _animations[0].update()
@@ -95,14 +113,16 @@ class GameScene is Scene {
     Canvas.cls(Color.darkgray)
     _sprites.each {|sprite| sprite.draw() }
     if (_hoverPos) {
-      var border = 2
+      var border = 0
       for (spot in _hoverPos) {
         var x = spot.x
         var y = spot.y
-        Canvas.rect(_tileSize * x - border, _tileSize * y - border, _tileSize + border * 2, _tileSize + border * 2, HOVER_COLOR)
+        Canvas.rectfill(_tileSize * x - border, _tileSize * y - border, _tileSize + border * 2, _tileSize + border * 2, HOVER_COLOR)
 
       }
     }
+    _buttons.each {|button| button.draw() }
+    Canvas.print(">", _tileSize * (_model.width + 0.5), 16 + _selectedTool * 24 + 4, Color.yellow)
     if (_animations.count > 0) {
       _animations[0].draw()
     }

@@ -145,6 +145,7 @@ class Model {
     return result
   }
 
+
   digAt(x, y, layers) {
     var result = []
     var currentItem = itemAt(x, y)
