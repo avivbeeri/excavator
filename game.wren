@@ -2,7 +2,7 @@ import "graphics" for Canvas, Color
 import "input" for Mouse, Keyboard
 import "math" for Vec
 import "./scene" for Scene
-import "./model" for Model
+import "./model" for Model, Tool
 import "./resource" for Resource
 import "./profile" for Profile
 
@@ -15,6 +15,7 @@ var BROWNS = [
 ]
 var HOVER_COLOR = Color.rgb(255, 255, 255, 128)
 
+
 class GameScene is Scene {
   construct init(args) {
     super(args)
@@ -26,6 +27,11 @@ class GameScene is Scene {
     _hoverPos = null
     _sprites = []
     _animations = []
+    _tools = [
+      Tool.new("Trowel", 0, 1),
+      Tool.new("Shovel", 1, 3)
+    ]
+    _selectedTool = 1
 
     updateView()
   }
@@ -47,9 +53,10 @@ class GameScene is Scene {
         pos.y >= 0 && pos.y < (_tileSize * _model.height)) {
       pos.x = (pos.x / _tileSize).floor
       pos.y = (pos.y / _tileSize).floor
-      _hoverPos = pos
+      var tool = _tools[_selectedTool]
+      _hoverPos = tool.template.map{|spot| spot + pos }.toList
       if (Mouse["left"].justPressed) {
-        events.addAll(_model.digAt(pos.x, pos.y, 1))
+        events.addAll(_model.digWith(pos.x, pos.y, tool))
         updateView()
       }
     }
@@ -89,9 +96,12 @@ class GameScene is Scene {
     _sprites.each {|sprite| sprite.draw() }
     if (_hoverPos) {
       var border = 2
-      var x = _hoverPos.x
-      var y = _hoverPos.y
-      Canvas.rect(_tileSize * x - border, _tileSize * y - border, _tileSize + border * 2, _tileSize + border * 2, HOVER_COLOR)
+      for (spot in _hoverPos) {
+        var x = spot.x
+        var y = spot.y
+        Canvas.rect(_tileSize * x - border, _tileSize * y - border, _tileSize + border * 2, _tileSize + border * 2, HOVER_COLOR)
+
+      }
     }
     if (_animations.count > 0) {
       _animations[0].draw()

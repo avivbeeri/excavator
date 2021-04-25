@@ -1,14 +1,45 @@
 import "math" for Vec
 import "./log" for Log
 
+class Tool {
+  construct new(name, size, power) {
+    _name = name
+    _size = size
+    _power = power
+    _template = getTemplate()
+  }
+
+  name { _name }
+  size { _size }
+  power { _power }
+  template { _template }
+
+  getTemplate() {
+    var center = Vec.new()
+    var targets = [center]
+    for (y in -_size .. _size) {
+      for (x in -_size .. _size) {
+        var loc = (Vec.new(x, y))
+        if (!(x == 0 && y == 0) && (loc - center).manhattan <= _size) {
+          targets.add(loc)
+        }
+      }
+    }
+    return targets
+  }
+}
+
 class Item {
-  construct new(pos, size, type, value) {
+  construct new(id, pos, size, type, value) {
     _pos = pos
     _health = 3
     _size = size
     _itemType = type
     _value = value
+    _id = id
   }
+
+  id { _id }
   pos { _pos }
   size { _size }
   itemType { _itemType }
@@ -28,10 +59,10 @@ class Model {
     _grid = List.filled(width * height, 0)
     _foundItems = []
     _items = [
-      Item.new(Vec.new(0, 0, 1), Vec.new(1, 1), "coin", 4),
-      Item.new(Vec.new(1, 0, 3), Vec.new(1, 2), "bone", 8),
-      Item.new(Vec.new(1, 4, 4), Vec.new(2, 1), "ironbar", 8),
-      Item.new(Vec.new(3, 3, 4), Vec.new(2, 2), "pot", 16)
+      Item.new(0, Vec.new(0, 0, 1), Vec.new(1, 1), "coin", 4),
+      Item.new(1, Vec.new(1, 0, 3), Vec.new(1, 2), "bone", 8),
+      Item.new(2, Vec.new(1, 4, 4), Vec.new(2, 1), "ironbar", 8),
+      Item.new(3, Vec.new(3, 3, 4), Vec.new(2, 2), "pot", 16)
     ]
   }
 
@@ -55,6 +86,63 @@ class Model {
     }
 
     _grid[y * _width + x] = v
+  }
+
+  digWith(x, y, tool) {
+    var result = []
+    var pos = Vec.new(x, y)
+    var locations = tool.template.map{|spot| spot + pos }
+    var foundItems = {}
+    var damagedItems = {}
+    for (layer in 0...tool.power) {
+      for (location in locations) {
+        var x = location.x
+        var y = location.y
+        if (x < 0 || x >= _width || y < 0 || y >= _height) {
+          continue
+        }
+        var currentItem = itemAt(x, y)
+        if (!currentItem) {
+          this[x, y] = this[x, y] + 1
+          var item = itemAt(x, y)
+          if (item) {
+            foundItems[item.id] = item
+          }
+        } else {
+          damagedItems[currentItem.id] = currentItem
+        }
+      }
+    }
+
+    for (item in damagedItems.values) {
+      result.add(["damage", item])
+      item.damage()
+      Log.debug("Damaged %(item.itemType) at %(x), %(y)")
+    }
+    for (item in foundItems.values) {
+      var top = item.pos
+      var bottom = item.pos + item.size
+      var covered = false
+      for (y in top.y...bottom.y) {
+        for (x in top.x...bottom.x) {
+          if (!itemAt(x, y)) {
+            covered = true
+            break
+          }
+        }
+      }
+      if (!covered) {
+        _items.remove(item)
+        _foundItems.add(item)
+        result.add(["found", item])
+        Log.debug("Item %(item.itemType) was found!")
+      }
+    }
+    if (isComplete) {
+      result.add(["complete"])
+    }
+    _movesTaken = (_movesTaken + 1)
+    return result
   }
 
   digAt(x, y, layers) {
