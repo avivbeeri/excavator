@@ -20,7 +20,7 @@ var HOVER_COLOR = Color.rgb(255, 255, 255, 64)
 class GameScene is Scene {
   construct init(args) {
     super(args)
-    _maxDepth = 8
+    _maxDepth = 12
     BROWNS = (_maxDepth..0).map {|v| Color.hsv(34, 1, (0.65-0.18) * (v / _maxDepth) + 0.18) }.toList
     _model = Model.new(5, 5, _maxDepth)
     _tileSize = Canvas.height / _model.height
@@ -96,12 +96,14 @@ class GameScene is Scene {
       for (x in 0..._model.width) {
         var depth = _model[x, y]
         var nextDepth = depth
+        /*
         for (i in depth..._maxDepth) {
           if (_model.itemAt(x, y, i)) {
             nextDepth = _maxDepth - (i - depth)
             break
           }
         }
+        */
         if (_model.itemAt(x, y)) {
         } else {
           sprites.add(GroundTile.new(Vec.new(x, y, (depth)), _tileSize, nextDepth))
