@@ -20,17 +20,16 @@ var HOVER_COLOR = Color.rgb(255, 255, 255, 64)
 class GameScene is Scene {
   construct init(args) {
     super(args)
-    _maxDepth = 12
+    _maxDepth = 8
     BROWNS = (_maxDepth..0).map {|v| Color.hsv(34, 1, (0.65-0.18) * (v / _maxDepth) + 0.18) }.toList
-    Canvas.resize(320, 180)
     _model = Model.new(5, 5, _maxDepth)
     _tileSize = Canvas.height / _model.height
     _hoverPos = null
     _sprites = []
     _animations = []
     _tools = [
-      Tool.new("Trowel", 0, 1),
-      Tool.new("Shovel", 1, 2)
+      Tool.new("Shovel", 1, 2),
+      Tool.new("Hand-Pick", 0, 1)
     ]
     _selectedTool = 0
     var i = 0
@@ -38,7 +37,7 @@ class GameScene is Scene {
       var name = tool.name
       var button = Button.new(name,
         Vec.new(_tileSize * (_model.width + 1), 16 + i * 24),
-        Vec.new(name.count * 8 + 16, 16)
+        Vec.new(name.count * 8 + 8, 16)
       )
       i = i + 1
       return button
@@ -96,9 +95,16 @@ class GameScene is Scene {
     for (y in 0..._model.height) {
       for (x in 0..._model.width) {
         var depth = _model[x, y]
+        var nextDepth = depth
+        for (i in depth..._maxDepth) {
+          if (_model.itemAt(x, y, i)) {
+            nextDepth = _maxDepth - (i - depth)
+            break
+          }
+        }
         if (_model.itemAt(x, y)) {
         } else {
-          sprites.add(GroundTile.new(Vec.new(x, y, depth), _tileSize))
+          sprites.add(GroundTile.new(Vec.new(x, y, (depth)), _tileSize, nextDepth))
         }
       }
     }
@@ -110,7 +116,7 @@ class GameScene is Scene {
   }
 
   draw(alpha) {
-    Canvas.cls(Color.darkgray)
+    Canvas.cls(Color.darkblue)
     _sprites.each {|sprite| sprite.draw() }
     if (_hoverPos) {
       var border = 0
@@ -193,10 +199,16 @@ class GroundTile is Sprite {
   construct new(pos, size) {
     super(pos)
     _tileSize = size
+    _showDepth = pos.z
+  }
+  construct new(pos, size, showDepth) {
+    super(pos)
+    _tileSize = size
+    _showDepth = showDepth
   }
 
   draw() {
-    var color = getDepthColor(pos.z)
+    var color = getDepthColor(_showDepth)
     Canvas.rectfill(_tileSize * pos.x, _tileSize * pos.y, _tileSize, _tileSize, color)
     Canvas.rect(_tileSize * pos.x, _tileSize * pos.y, _tileSize, _tileSize, Color.darkpurple)
   }

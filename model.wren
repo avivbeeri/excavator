@@ -30,12 +30,23 @@ class Tool {
 }
 
 class Item {
-  construct new(id, pos, size, type, value) {
-    _pos = pos
-    _health = 3
+  construct new(type, size, value) {
     _size = size
     _itemType = type
     _value = value
+  }
+  size { _size }
+  itemType { _itemType }
+  value { _value }
+}
+
+class ItemInstance {
+  construct new(id, pos, data) {
+    _pos = pos
+    _health = 3
+    _size = data.size
+    _itemType = data.itemType
+    _value = data.value
     _id = id
   }
 
@@ -50,6 +61,12 @@ class Item {
   }
 }
 
+var ALL_ITEMS = [
+  Item.new("coin", Vec.new(1, 1), 4),
+  Item.new("bone", Vec.new(1, 2), 8),
+  Item.new("ironbar", Vec.new(2, 1), 8),
+  Item.new("pot", Vec.new(2, 2), 16)
+]
 
 class Model {
   construct new(width, height, depth) {
@@ -58,12 +75,20 @@ class Model {
     _height = height
     _grid = List.filled(width * height, 0)
     _foundItems = []
-    _items = [
-      Item.new(0, Vec.new(0, 0, 1), Vec.new(1, 1), "coin", 4),
-      Item.new(1, Vec.new(1, 0, 3), Vec.new(1, 2), "bone", 8),
-      Item.new(2, Vec.new(1, 4, 4), Vec.new(2, 1), "ironbar", 8),
-      Item.new(3, Vec.new(3, 3, 4), Vec.new(2, 2), "pot", 16)
+    _items = []
+    placeItems()
+  }
+
+  placeItems() {
+    var locations = [
+      Vec.new(0, 0, 1),
+      Vec.new(1, 0, 3),
+      Vec.new(1, 4, 4),
+      Vec.new(3, 3, 4)
     ]
+    for (id in 0...locations.count) {
+      _items.add(ItemInstance.new(id, locations[id], ALL_ITEMS[id]))
+    }
   }
 
   isComplete { _items.count == 0 }
